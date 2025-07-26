@@ -45,6 +45,14 @@ You can optionally modify these values:
 
 You can leave the rest of the values unchanged.
 
+If you like, you can decrease `TOKEN_TTL_RESOLUTION` to reduce RAM usage over time.
+But this will increase CPU usage, due to the shorter caching duration.
+
+Now modify `redis.conf`, if needed:
+
+- You can increase `maxmemory 512mb` if you like. Technically the server needs far less than 512 MB of memory due to load balancing and the fact that only the resuling GIF is cache, which is very small in size
+- Persistence is disabled and shouldn't need to be enabled
+
 The only values that might need changing in the future are `MAXIMUM_OUTPUT_SIZE` and `MAXIMUM_OUTPUT_FRAMERATE`, which limit how large the result GIF may be. To save on resources and since the little cover image on Discord isn't very large, these values are small.
 
 Now you can start all services:
@@ -69,6 +77,44 @@ Now make sure that the server is accessible to the public
 under the base URL you specified in `SERVER_BASE_URL`.
 
 Done!
+
+## Contribute your server instance to Music Presence
+
+You can help spread the load of converting animated video covers to GIFs
+by sharing the following information with me:
+
+- The value for SERVER_BASE_URL
+- The value for TOKEN_AUTH_USERNAME
+- The value for TOKEN_AUTH_PASSWORD
+- The value for METRICS_AUTH_USERNAME
+- The original password you use to generate METRICS_AUTH_PASSWORD_BCRYPT
+
+The last two are option, but help me keep an eye on your conversion service instance.
+I'll let you know if e.g. Redis hits its memory limit
+or individual conversions take too long.
+
+Thank you for contributing your server and adding redundancy!
+
+## Effective load balancing
+
+Your server won't be hit with all video conversions.
+Video conversion requests are spread across all available server instances
+and are hashed using the video URL that is being converted.
+That means the same server always converts the same subset of URLs,
+evenly distributed across servers.
+This ensures that when a cached conversion result is available,
+it is always used, instead of converting it again on another server.
+
+## What endpoints does the server expose?
+
+The server exposes the following endpoints:
+
+- `/token`: This endpoint is used to generated tokens for the /convert endpoint. It takes a number of query parameters, including the URL to the original video and returns a token and a full URL to the /convert endpoint. Requests to this URL already start the conversion of the video in the background, to speed up the response time of the /convert endpoint
+- `/convert`: Requests to this endpoint will stream the conversion result in real-time, even while the conversion is in progress. Conversion is only done once and cache for the duration specified by the `CONVERSION_RESULT_TTL` environment variable
+- `/metrics/video`: This endpoint exposes Prometheus metrics for the video conversion server with statistics about the number of requests made to each endpoint and how long these requests took. It's authenticated with the metrics auth environment variables
+- `/metrics/cache`: This endpoint exposes Prometheus metrics for the Redis cache with statistics about the number of active cache entries. It's authenticated with the metrics auth environment variables
+
+Feel free to roll your own Prometheus/Grafana dashboards to keep an eye on your server! These are exposed together with the video conversion service, so that it's possible for me to see that load balancing between multiple instances works correctly.
 
 ## Appendix
 
