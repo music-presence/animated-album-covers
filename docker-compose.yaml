@@ -22,10 +22,10 @@ services:
       - 80:80
 
   video:
-    image: musicpresence-video-conversion-service:latest
-    # build:
-    #   context: ./video-conversion-service
-    #   dockerfile: Dockerfile
+    # image: musicpresence-video-conversion-service:latest
+    build:
+      context: ./video-conversion-service
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file: .env
     networks:
