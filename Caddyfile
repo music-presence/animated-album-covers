@@ -1,0 +1,23 @@
+:80 {
+	handle_path /metrics {
+		respond "forbidden" 403
+	}
+
+	basic_auth /metrics/* {
+		{env.METRICS_AUTH_USERNAME} {env.METRICS_AUTH_PASSWORD_BCRYPT}
+	}
+
+	handle_path /metrics/video {
+		rewrite * /metrics
+		reverse_proxy musicpresence-animated-album-covers_video:80
+	}
+
+	handle_path /metrics/cache {
+		rewrite * /metrics
+		reverse_proxy musicpresence-animated-album-covers_redis-metrics:9121
+	}
+
+	handle {
+		reverse_proxy musicpresence-animated-album-covers_video
+	}
+}

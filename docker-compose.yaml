@@ -1,0 +1,70 @@
+name: musicpresence-animated-album-covers
+
+networks:
+  network:
+
+services:
+
+  http:
+    image: caddy:latest
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+    env_file: .env
+    networks:
+      - network
+    hostname: ${COMPOSE_PROJECT_NAME}_http
+    depends_on:
+      - video
+    ports:
+      - 80:80
+
+  video:
+    image: musicpresence-video-conversion-service:latest
+    # build:
+    #   context: ./video-conversion-service
+    #   dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - network
+    hostname: ${COMPOSE_PROJECT_NAME}_video
+    depends_on:
+      redis-healthcheck:
+        condition: service_healthy
+
+  redis:
+    image: redis:8.0-alpine
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis.conf"]
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis.conf
+    networks:
+      - network
+    hostname: ${COMPOSE_PROJECT_NAME}_redis
+
+  redis-healthcheck:
+    image: goodsmileduck/redis-cli:latest
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "musicpresence-animated-album-covers_redis", "-p", "6379", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    command: "sh -c 'while :; do sleep 2073600; done'"
+    networks:
+      - network
+
+  redis-metrics:
+    image: oliver006/redis_exporter:latest
+    command:
+      - '--redis.addr=redis://musicpresence-animated-album-covers_redis:6379'
+    networks:
+      - network
+    hostname: ${COMPOSE_PROJECT_NAME}_redis-metrics
+    depends_on:
+      redis-healthcheck:
+        condition: service_healthy
