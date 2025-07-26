@@ -1,0 +1,3 @@
+[submodule "video-conversion-service"]
+	path = video-conversion-service
+	url = https://github.com/ungive/video-conversion-service
