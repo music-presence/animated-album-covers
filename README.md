@@ -58,7 +58,7 @@ The only values that might need changing in the future are `MAXIMUM_OUTPUT_SIZE`
 Now you can start all services:
 
 ```
-$ docker compose up -d
+$ docker compose up -d --build
 ```
 
 Check the logs to see that everything's working:
