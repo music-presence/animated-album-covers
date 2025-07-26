@@ -36,11 +36,18 @@ You must modify the following values:
 |METRICS_AUTH_USERNAME|Choose an arbitrary user name|
 |METRICS_AUTH_PASSWORD_BCRYPT|Choose a secure password. This must contain a bcrypt hash. You can generate it for your password with `$ make credentials` and pasting the password twice. Make sure to keep note of the password|
 
-You can optionally modify these values:
+You should modify these values
+depending on how much load your server can handle:
 
 |Variable|Explanation|
 |-|-|
 |CONVERSION_JOB_CONCURRENCY|Controls how many simultaneous `ffmpeg` instances are allowed to run at the same time. This shouldn't exceed your CPU count. Currently Discord does not support streaming of GIFs, so GIF conversion has to be done as fast as possible, which means a single `ffmpeg` instance will use any resources it has available|
+|CONVERSION_FFMPEG_THREADS|Controls how many threads a single ffmpeg instance may use. This can slightly improve conversion speed, although the impact is not very big due to GIF conversion being mostly single-threaded in nature|
+
+You can optionally modify these values:
+
+|Variable|Explanation|
+|-|-|
 |DEBUG|If you wanna reduce log clutter, you can set this to 0. The information added by enabling debug loggin will help in diagnosing any issues though, should they come up|
 
 You can leave the rest of the values unchanged.
